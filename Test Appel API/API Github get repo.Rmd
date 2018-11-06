@@ -1,0 +1,62 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+library(odbc)
+library(RCurl)
+library(tidyverse)
+library(httr)
+library(jsonlite)
+con <- dbConnect(odbc::odbc(), "PostgreSQL30")
+```
+
+```{r Construction appel API}
+ # Save username as variable
+ username <- 'pierre56'
+
+ # Save base enpoint as variable
+ url_git <- 'https://api.github.com/'
+
+ # Construct API request
+repos <- GET(url = paste0(url_git,'users/',username,'/repos'))
+
+status_code(repos)
+  
+ # Examine response components
+ names(repos)
+
+ # Process API request content 
+ repo_content <- content(repos)
+ 
+
+```
+
+```{r}
+# Apply function across all list elements to extract the name and address of each repo
+repo_df <- lapply(repo_content, function(x) {
+  df <- data_frame(reponse        = x$name,
+                   address     = x$html_url,
+                   commits     = x$git_commits_url)
+}) %>% bind_rows()
+
+# get reponse
+repo_df
+
+```
+
+```{r}
+# Repo URL
+url_repo <- repo_df$commits[repo_df$repo=='geoserver']
+
+# clean URL for proper format...
+url_repo <- gsub(url_repo, pattern = 'git/commits{/sha}', replacement = 'commits', fixed = TRUE)
+
+# API request
+commits <- GET(url < url_repo)
+
+# List elements
+names(commits)
+```
+
