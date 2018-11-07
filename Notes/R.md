@@ -44,3 +44,7 @@ names(repos)
 
 ##  [1] "url"         "status_code" "headers"     "all_headers" "cookies"    
 ##  [6] "content"     "date"        "times"       "request"     "handle"
+
+
+## Importing data from a JSON file into R
+https://stackoverflow.com/questions/2617600/importing-data-from-a-json-file-into-r
