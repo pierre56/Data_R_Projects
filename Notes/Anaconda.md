@@ -45,6 +45,7 @@ https://marketplace.visualstudio.com/items?itemName=ms-python.anaconda-extension
     anaconda qt platform plugin "windows" in ""
 
 https://stackoverflow.com/questions/47299757/app-failed-to-start-because-it-could-not-find-qt-platform-plugin-windows-in
+
 https://anaconda.org/conda-forge/qtconsole
 
 ## Config
@@ -120,6 +121,15 @@ conda activate Satan
 ### List des packages dans l'environment
 conda list --explicit
 conda list --explicit > spec-file.txt
+
+
+## The easiest way to save the packages from an environment to be installed in another computer is:
+> conda list -e > req.txt
+
+then you can install the environment using
+>conda create -n new environment --file req.txt
+
+
 
 ### Install pip
 

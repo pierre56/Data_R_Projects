@@ -82,3 +82,8 @@ localhost:5432
 Formation_postgresql/dimensions
 postgres
 no mdp
+
+## Installation Add-on via interface graphique
+ajout Add-on:
+* Textable
+* Timeseries
