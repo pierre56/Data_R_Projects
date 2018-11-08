@@ -81,7 +81,13 @@ https://anaconda.org/conda-forge/qtconsole
              netrc file : None
            offline mode : False
 
-## Modifcation du fichier de config
+# Modifcation du fichier de config
+
+## DOC
+https://conda.io/docs/user-guide/configuration/use-condarc.html
+
+## Config
+
 > C:\Users\p.ledorze\.condarc
 
     proxy_servers:
@@ -107,8 +113,10 @@ C:\ProgramData\Anaconda3\Library\bin\conda.bat
 C:\ProgramData\Anaconda3\Scripts\conda.ex
 
 
-## Création nouvel env
+# Création nouvel env
 
+## DOC
+https://medium.com/data-science-in-practice/saving-the-environment-with-anaconda-ad68e603d8c5
 
 ### Info environment
 conda info --envs
@@ -124,31 +132,56 @@ conda list --explicit > spec-file.txt
 
 
 ## The easiest way to save the packages from an environment to be installed in another computer is:
-> conda list -e > req.txt
+> conda env export > environment.yaml
 
 then you can install the environment using
->conda create -n new environment --file req.txt
+>conda create -n new environment -f environment.yaml
 
+##
+
+$ cd path/to/myproject
+
+$ mkdir myproject # create project folder        
+$ cd myproject       
+
+$ conda create --name myproject.        # create new env.
+$ source activate myproject             # activate environment
+
+$ conda install <package-name>          # install package(s)
+
+$ conda env export > environment.yaml   # save env spec.
+
+
+# Package manager => PIP ou Conda ?
+
+# Install pip
+
+## Doc PIP
+https://conda.io/docs/commands.html#conda-vs-pip-vs-virtualenv-commands
+https://stackoverflow.com/questions/20994716/what-is-the-difference-between-pip-and-conda
+https://medium.com/data-science-in-practice/saving-the-environment-with-anaconda-ad68e603d8c5
 
 
 ### Install pip
 
 Il n'est pas recommandé d'utiliser PIP et Conda en mm temps.
-https://stackoverflow.com/questions/20994716/what-is-the-difference-between-pip-and-conda
 mais dans certains cas c'est quand mm bien pratique...
 
 conda install -n Satan pip
 source activate Satan
 pip <pip_subcommand>
 
-### Installation de packages
+# Installation de packages avec conda
+
+## Doc Conda
 https://conda.io/docs/user-guide/getting-started.html#managing-packages
 
+## Conda Command
 
 conda install anaconda
 (beaucoup de packages + dépendances)
 
-## RecursionError('maximum recursion depth exceeded',)
+### RecursionError('maximum recursion depth exceeded',)
 Soucis récurrent, doute si lié au proxy ou si lié a un big de conda
 
 Impossible de finir une Installation de package via conda

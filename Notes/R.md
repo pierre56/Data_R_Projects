@@ -48,3 +48,7 @@ names(repos)
 
 ## Importing data from a JSON file into R
 https://stackoverflow.com/questions/2617600/importing-data-from-a-json-file-into-r
+
+
+# API Intéressantes
+[cran](https://cran.r-project.org/web/packages/jsonlite/vignettes/json-apis.html)
