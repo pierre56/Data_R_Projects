@@ -52,3 +52,7 @@ https://stackoverflow.com/questions/2617600/importing-data-from-a-json-file-into
 
 # API Intéressantes
 [cran](https://cran.r-project.org/web/packages/jsonlite/vignettes/json-apis.html)
+
+
+## Package pour faire des inputs
+[svDialogs](https://cran.r-project.org/web/packages/svDialogs/index.html)
