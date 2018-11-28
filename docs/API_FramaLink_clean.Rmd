@@ -1,0 +1,334 @@
+---
+title: "R Notebook - API_FramaLink"
+author: "Pierre Le Dorze "
+date: "21/11/2018"
+output: html_notebook
+---
+
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+ 
+# API_FramaLink
+
+# Configuration
+# Install packages
+## Gestion avec Pacman
+
+```{r}
+
+if (!require("pacman")) install.packages("pacman"); library(pacman)
+
+
+```
+
+## Install + Load packages
+
+```{r}
+
+p_load(tidyverse,httr,jsonlite,RCurl,devtools,RPostgreSQL, ggplot2,plyr, dplyr, tidyr, rjson, foreach, rlist, sqldf,svDialogs ,SciViews , tcltk2 , svGUI, igraph, r2d3 )
+
+
+# Package Web : httr || rjson || jsonlite || RCurl
+# Package DB : RPostgreSQL || sqldf || 
+# Package input user : svDialogs || SciViews || tcltk2 || svGUI
+# Package graph : igraph
+
+```
+
+
+
+# Variables 
+## Variables globales
+```{r}
+
+base_url <<-"https://frama.link/stats/"
+
+DB_url_list <<- list()
+API_url_list <<- list()
+
+
+schema="audelor"
+table="Gestion_url_courte"
+
+
+```
+
+
+## Param du Handle
+
+J'utilise ce handle spécifique pour passer le proxy de l'agglo
+```{r}
+
+handle_audelor = getCurlHandle()
+  # Note the header that extends across two lines with the second line
+  # prefixed with white space.
+  curlSetOpt( .opts = list(verbose = TRUE,
+                           proxy="https://10.128.152.1:3128"),
+              curl = handle_audelor)
+  
+
+```
+
+## Param connection DB   
+
+```{r}
+
+
+# Connexion
+drv <<- dbDriver("PostgreSQL")
+con <<- dbConnect(drv,
+                 dbname="sig_ref",
+                 host="10.128.171.168",
+                 port=5432,
+                 user="audelor",
+                 password="kuFh39adv" )
+
+
+options(sqldf.RPostgreSQL.user ="audelor",
+        sqldf.RPostgreSQL.password ="kuFh39adv",
+        sqldf.RPostgreSQL.dbname ="sig_ref",
+        sqldf.RPostgreSQL.host ="10.128.171.168",
+        sqldf.RPostgreSQL.port =5432)
+
+
+```
+
+
+# Get url in DB 
+
+
+```{r}
+
+
+# Vérification si Table Exist
+ if (dbExistsTable(con, c(schema,table)) == TRUE){
+   
+   
+   DB_url_list <- fn$sqldf("select * from \"$schema\".\"$table\"")
+
+   
+ }
+
+colnames(DB_url_list) <- c("id", "clic counter", "created_at", "adresse courte", "success","timestamp","url longue" )
+
+# show DB_url_list
+DB_url_list
+
+
+```
+
+
+# Get Data from API 
+
+```{r}
+
+
+for(i in DB_url_list$id){
+
+if(i != ""){
+  
+    url_stat = getURL(paste(base_url,i, sep=""), curl = handle_audelor)
+  
+  data_url_courte <- fromJSON(url_stat)
+
+  API_url_list[[i]] <- data_url_courte
+  }
+}  
+
+# show API_url_list
+API_url_list
+
+```
+# Afficher les résultats sous forme de tableau
+
+```{r}
+
+# Création du tableau de données
+
+# utilisation du packages("plyr")
+  FramaLink_stats <- ldply (API_url_list, data.frame, .id="id")
+  
+  FramaLink_stats
+
+
+```
+
+
+# Creation d'une url courte via FramaLink API 
+
+
+## Input user new url
+```{r}
+
+user.answer    <- menu(c("y", "n"), title="Voulez-vous créer une nouvelle url courte ?")
+
+user.answer
+
+
+```
+
+
+## Creation de l'url courte via API FramaLink
+```{r}
+
+
+if(user.answer == 1){
+  
+
+## Get url from user input 
+# A ameliorer -> bug dlgInput
+  
+new_url.lsturl        <- readline(prompt="Enter url a raccourcir: ")
+new_url.lsturlcustom <- readline(prompt="Enter url minifiée souhaitée: ")
+  
+#new_url.lsturl    <- dlgInput("Entrer l'url a raccourcir: 2",  gui = .GUI)
+#new_url.lsturlcustom <- readline(prompt="Enter url minifiée souhaitée: ")
+  
+
+# PostForm Création URL raccourcie
+  
+   postForm("https://frama.link/a",
+            "lsturl" = new_url.lsturl ,
+            "lsturl-custom" = new_url.lsturlcustom,
+            "format" = "json",
+            curl = handle_audelor, style = 'HTTPPOST',
+            .encoding = integer(), binary = NA, .checkParams = TRUE,
+            .contentEncodeFun = curlEscape)
+  
+#  Création Url courte
+
+url <-getURL(paste(base_url,new_url.lsturlcustom, sep=""),  curl = handle_audelor)
+rst <- fromJSON(url)
+
+rst$id <-new_url.lsturlcustom
+
+
+# Verification création
+
+head(rst)
+
+}else{
+  
+print("ok pas de soucis")
+
+# Ne pas oublier de fermer la connection à la base de données
+dbDisconnect(con)
+
+}
+
+```
+
+
+# Si Création réussie
+
+## Modif data.frame
+```{r}
+
+if(rst$success=="TRUE"){
+
+
+# Affichage du résultat    
+  print("Bravo pour avoir créé une nouvelle url courte ")
+
+
+# Ajout de la nouvelle url a la liste 
+  
+FramaLink_stats <- bind_rows(FramaLink_stats,rst)
+
+FramaLink_stats
+}
+
+```
+
+## Ajout en DB de la nouvelle url 
+```{r}
+
+if(rst$success=="TRUE"){
+
+
+
+# Vérification si Table Exist
+dbExistsTable(con, c(schema,table))
+
+# Drop Table
+dbRemoveTable(con, c(schema,table))
+
+dbWriteTable(con, c(schema,table), value = FramaLink_stats)
+
+
+#dbWriteTable(con, c(schema,table), value = FramaLink_stats, append = TRUE)
+ 
+# Read table from PostgreSQL into R data frame:
+ myTable <- dbReadTable(con, c(schema,table))
+
+
+myTable <- fn$sqldf("select * from \"$schema\".\"$table\"")
+
+
+# Head pour avoir le nom des champs + première row
+head(myTable)
+
+
+# Ne pas oublier de fermer la connection à la base de données
+dbDisconnect(con)
+
+
+}else{
+
+  print("Erreur dans la création d'une nouvelle url courte ")
+ 
+  head(rst)
+
+  # Ne pas oublier de fermer la connection à la base de données
+  dbDisconnect(con)
+
+}
+
+
+```
+
+# Statistiques des url FramaLink
+
+## Sous forme de tableau
+```{r}
+
+
+FramaLink_stats
+
+```
+
+
+## Sous forme de graph
+### Simple Pie Chart
+
+
+```{r}
+x<-FramaLink_stats$counter
+piepercent<- round(100*x/sum(x), 1)
+
+slices <- FramaLink_stats$counter
+labels <- FramaLink_stats$id 
+
+#labels <- paste(FramaLink_stats$id, piepercent, collapse = " ")
+
+
+# Plot the chart.
+pie(slices,
+    labels ,
+    main = "Pie Chart of click counter",
+    col = rainbow(length(x)))
+
+legend("topright",
+       FramaLink_stats$id ,
+       cex = 0.8,
+       fill = rainbow(length(x))
+       )
+
+
+
+```
